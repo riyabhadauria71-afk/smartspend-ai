@@ -10,11 +10,12 @@ from services.catalog_service import (
     get_product_by_id,
 )
 from services.gemini_service import GeminiServiceError, get_ai_recommendations
-from services.paypal_service import PayPalServiceError, create_order
+from services.paypal_service import PayPalServiceError, create_order, get_public_client_id
 
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
+app.config["PAYPAL_CLIENT_ID"] = get_public_client_id()
 
 MAX_ALLOWED_BUDGET = 10000  # sanity limit, in USD
 
@@ -124,8 +125,22 @@ def review():
         ), 400
 
     remaining = round(budget - product["price"], 2)
+
+    # The client ID is public and goes to the browser. The secret never does.
+    paypal_client_id = None
+    payment_error = None
+    try:
+        paypal_client_id = get_public_client_id()
+    except PayPalServiceError as exc:
+        payment_error = str(exc)
+
     return render_template(
-        "review.html", product=product, budget=budget, remaining=remaining
+        "review.html",
+        product=product,
+        budget=budget,
+        remaining=remaining,
+        paypal_client_id=paypal_client_id,
+        payment_error=payment_error,
     )
 
 
