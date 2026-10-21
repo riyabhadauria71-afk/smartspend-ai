@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="display-5 fw-bold">Spend smarter, not harder.</h1>
+    <p class="lead text-muted">
+        Tell us what you want to buy and your budget. Our AI compares real options
+        from our catalog and explains the trade-offs.
+    </p>
+    <a href="{{ url_for('shop') }}" class="btn btn-primary btn-lg">Start shopping</a>
+</div>
+{% endblock %}

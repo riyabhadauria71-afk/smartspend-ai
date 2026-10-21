@@ -1,0 +1,98 @@
+[
+  {
+    "id": "hp-001",
+    "name": "BassBuds Wired Earphones",
+    "category": "headphones",
+    "price": 12.00,
+    "currency": "USD",
+    "features": ["Wired 3.5mm", "In-ear", "Built-in mic", "Lightweight"]
+  },
+  {
+    "id": "hp-002",
+    "name": "ClearTalk Wireless Earbuds",
+    "category": "headphones",
+    "price": 19.00,
+    "currency": "USD",
+    "features": ["Bluetooth 5.3", "6-hour battery", "Charging case", "Touch controls"]
+  },
+  {
+    "id": "hp-003",
+    "name": "StudioLite Over-Ear Headphones",
+    "category": "headphones",
+    "price": 29.00,
+    "currency": "USD",
+    "features": ["Wired + Bluetooth", "Over-ear comfort", "20-hour battery", "Foldable"]
+  },
+  {
+    "id": "hp-004",
+    "name": "NoiseAway ANC Headphones",
+    "category": "headphones",
+    "price": 45.00,
+    "currency": "USD",
+    "features": ["Active noise cancelling", "30-hour battery", "Bluetooth 5.3", "Carry case"]
+  },
+  {
+    "id": "kb-001",
+    "name": "TypeEasy Basic Keyboard",
+    "category": "keyboards",
+    "price": 10.00,
+    "currency": "USD",
+    "features": ["Full-size", "Wired USB", "Quiet keys", "Spill-resistant"]
+  },
+  {
+    "id": "kb-002",
+    "name": "SlimWave Wireless Keyboard",
+    "category": "keyboards",
+    "price": 18.00,
+    "currency": "USD",
+    "features": ["Slim design", "Bluetooth + 2.4GHz", "Multi-device", "Rechargeable"]
+  },
+  {
+    "id": "kb-003",
+    "name": "ClickPro Mechanical Keyboard",
+    "category": "keyboards",
+    "price": 32.00,
+    "currency": "USD",
+    "features": ["Mechanical switches", "RGB backlight", "Wired USB-C", "Compact 75% layout"]
+  },
+  {
+    "id": "kb-004",
+    "name": "TypeMaster Pro Wireless Mechanical",
+    "category": "keyboards",
+    "price": 55.00,
+    "currency": "USD",
+    "features": ["Hot-swappable switches", "Bluetooth + 2.4GHz", "Aluminium frame", "Long battery life"]
+  },
+  {
+    "id": "bp-001",
+    "name": "DailyCarry Backpack",
+    "category": "backpacks",
+    "price": 14.00,
+    "currency": "USD",
+    "features": ["20L capacity", "Water-resistant fabric", "Padded straps", "Laptop sleeve up to 14 inch"]
+  },
+  {
+    "id": "bp-002",
+    "name": "CampusPro Backpack",
+    "category": "backpacks",
+    "price": 26.00,
+    "currency": "USD",
+    "features": ["28L capacity", "USB charging port", "Laptop sleeve up to 15.6 inch", "Anti-theft pocket"]
+  },
+  {
+    "id": "bp-003",
+    "name": "TrekLite Travel Backpack",
+    "category": "backpacks",
+    "price": 38.00,
+    "currency": "USD",
+    "features": ["35L capacity", "Rain cover included", "Ergonomic back panel", "Multiple compartments"]
+  },
+  {
+    "id": "bp-004",
+    "name": "ExecutiveSlim Laptop Backpack",
+    "category": "backpacks",
+    "price": 49.00,
+    "currency": "USD",
+    "features": ["Slim professional look", "Hard-shell laptop protection", "Water-resistant", "Hidden pockets"]
+  }
+]

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping preferences - SmartSpend AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <h2 class="mb-4">What are you looking for?</h2>
+
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('shop') }}">
+            <div class="mb-3">
+                <label for="category" class="form-label">Product category</label>
+                <select class="form-select" id="category" name="category" required>
+                    <option value="">Choose...</option>
+                    {% for c in categories %}
+                    <option value="{{ c }}" {% if form.get('category') == c %}selected{% endif %}>
+                        {{ c|capitalize }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="budget" class="form-label">Maximum budget (USD)</label>
+                <input type="number" class="form-control" id="budget" name="budget"
+                       min="1" step="0.01" required value="{{ form.get('budget', '') }}">
+            </div>
+
+            <div class="mb-3">
+                <label for="use" class="form-label">Intended use</label>
+                <input type="text" class="form-control" id="use" name="use" maxlength="200"
+                       placeholder="e.g. daily commute, studying, gaming"
+                       value="{{ form.get('use', '') }}">
+            </div>
+
+            <div class="mb-3">
+                <label for="preferences" class="form-label">Important preferences</label>
+                <textarea class="form-control" id="preferences" name="preferences" rows="2"
+                          maxlength="300"
+                          placeholder="e.g. long battery life, lightweight">{{ form.get('preferences', '') }}</textarea>
+            </div>
+
+            <div class="mb-4">
+                <label for="priority" class="form-label">What matters most?</label>
+                <select class="form-select" id="priority" name="priority">
+                    <option value="value" {% if form.get('priority') == 'value' %}selected{% endif %}>Best value</option>
+                    <option value="quality" {% if form.get('priority') == 'quality' %}selected{% endif %}>Quality</option>
+                    <option value="features" {% if form.get('priority') == 'features' %}selected{% endif %}>Features</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100">Find products</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
