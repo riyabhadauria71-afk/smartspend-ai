@@ -1,7 +1,7 @@
 import logging
 import math
 
-from flask import Flask, render_template, request
+from flask import Flask, jsonify, render_template, request
 
 from services.catalog_service import (
     compare_products,
@@ -10,6 +10,7 @@ from services.catalog_service import (
     get_product_by_id,
 )
 from services.gemini_service import GeminiServiceError, get_ai_recommendations
+from services.paypal_service import PayPalServiceError, create_order
 
 logging.basicConfig(level=logging.INFO)
 
@@ -126,6 +127,36 @@ def review():
     return render_template(
         "review.html", product=product, budget=budget, remaining=remaining
     )
+
+
+@app.route("/api/orders", methods=["POST"])
+def api_create_order():
+    """Create a PayPal order.
+
+    The browser sends only a product id and a budget. The amount is looked up
+    here from the catalog, so it cannot be tampered with.
+    """
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid request."}), 400
+
+    product_id = str(data.get("product_id", "")).strip()
+    budget, error = parse_budget(data.get("budget"))
+    if error:
+        return jsonify({"error": error}), 400
+
+    product = get_product_by_id(product_id)
+    if product is None:
+        return jsonify({"error": "That product could not be found."}), 400
+    if product["price"] > budget:
+        return jsonify({"error": "That product is over your budget."}), 400
+
+    try:
+        order_id = create_order(product)
+    except PayPalServiceError as exc:
+        return jsonify({"error": str(exc)}), exc.status_code
+
+    return jsonify({"id": order_id})
 
 
 if __name__ == "__main__":
