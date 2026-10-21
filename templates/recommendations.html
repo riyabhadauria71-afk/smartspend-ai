@@ -23,6 +23,16 @@
 
 <h4 class="mt-4">Within your budget</h4>
 {% if within_budget %}
+
+<form id="compare-form" method="POST" action="{{ url_for('compare') }}"
+      class="d-flex align-items-center gap-3 mb-3">
+    <input type="hidden" name="budget" value="{{ budget }}">
+    <button id="compare-btn" type="submit" class="btn btn-outline-primary" disabled>
+        Compare selected
+    </button>
+    <span class="small text-muted">Tick 2 or 3 products using the Compare boxes.</span>
+</form>
+
 <div class="row g-3">
     {% for p in within_budget %}
     {% set advice = ai.advice.get(p.id) if ai else none %}
@@ -57,6 +67,12 @@
                 {% endif %}
             </div>
             <div class="card-footer bg-white border-0 pb-3">
+                <div class="form-check mb-2">
+                    <input class="form-check-input compare-box" type="checkbox"
+                           name="product_ids" value="{{ p.id }}" id="cmp-{{ p.id }}"
+                           form="compare-form">
+                    <label class="form-check-label small" for="cmp-{{ p.id }}">Compare</label>
+                </div>
                 <form method="POST" action="{{ url_for('review') }}">
                     <input type="hidden" name="product_id" value="{{ p.id }}">
                     <input type="hidden" name="budget" value="{{ budget }}">
@@ -92,4 +108,20 @@
 {% endif %}
 
 <a href="{{ url_for('shop') }}" class="btn btn-outline-secondary mt-4">Change preferences</a>
+
+<script>
+    const boxes = document.querySelectorAll(".compare-box");
+    const compareBtn = document.getElementById("compare-btn");
+
+    function updateCompare() {
+        const checked = [...boxes].filter(function (b) { return b.checked; });
+        if (compareBtn) {
+            compareBtn.disabled = checked.length < 2;
+        }
+        boxes.forEach(function (b) {
+            if (!b.checked) { b.disabled = checked.length >= 3; }
+        });
+    }
+    boxes.forEach(function (b) { b.addEventListener("change", updateCompare); });
+</script>
 {% endblock %}

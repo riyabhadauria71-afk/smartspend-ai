@@ -3,7 +3,12 @@ import math
 
 from flask import Flask, render_template, request
 
-from services.catalog_service import get_categories, find_products, get_product_by_id
+from services.catalog_service import (
+    compare_products,
+    find_products,
+    get_categories,
+    get_product_by_id,
+)
 from services.gemini_service import GeminiServiceError, get_ai_recommendations
 
 logging.basicConfig(level=logging.INFO)
@@ -77,6 +82,27 @@ def shop():
         ai=ai,
         ai_error=ai_error,
     )
+
+
+@app.route("/compare", methods=["POST"])
+def compare():
+    """Compare 2-3 products. Plain Python only, no AI."""
+    budget, error = parse_budget(request.form.get("budget", ""))
+    comparison = None
+
+    if not error:
+        try:
+            ids = request.form.getlist("product_ids")[:10]  # cap abuse
+            comparison = compare_products(ids, budget)
+        except ValueError as exc:
+            error = str(exc)
+
+    if error:
+        return render_template(
+            "shop.html", categories=get_categories(), form={}, error=error
+        ), 400
+
+    return render_template("compare.html", comparison=comparison, budget=budget)
 
 
 @app.route("/review", methods=["POST"])

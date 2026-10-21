@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Compare products - SmartSpend AI{% endblock %}
+
+{% block content %}
+<h2 class="mb-1">Compare products</h2>
+<p class="text-muted">
+    Your budget: ${{ "%.2f"|format(budget) }} {{ comparison.currency }}.
+    This comparison is calculated from catalog data, not by AI.
+</p>
+
+<div class="table-responsive">
+    <table class="table table-bordered align-middle bg-white">
+        <thead class="table-light">
+            <tr>
+                <th style="width: 20%"></th>
+                {% for p in comparison.products %}
+                <th>
+                    {{ p.name }}
+                    {% if p.is_cheapest %}<span class="badge bg-success ms-1">Lowest price</span>{% endif %}
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th>Price</th>
+                {% for p in comparison.products %}
+                <td class="fw-bold">${{ "%.2f"|format(p.price) }} {{ p.currency }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th>More than the cheapest</th>
+                {% for p in comparison.products %}
+                <td>
+                    {% if p.price_diff == 0 %}-{% else %}+${{ "%.2f"|format(p.price_diff) }}{% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th>Budget remaining</th>
+                {% for p in comparison.products %}
+                <td class="{{ 'text-success' if p.within_budget else 'text-danger' }}">
+                    {% if p.within_budget %}
+                    ${{ "%.2f"|format(p.remaining) }}
+                    {% else %}
+                    Over budget by ${{ "%.2f"|format(-p.remaining) }}
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th>Only this product has</th>
+                {% for p in comparison.products %}
+                <td>
+                    {% if p.unique_features %}
+                    <ul class="small mb-0">
+                        {% for f in p.unique_features %}<li>{{ f }}</li>{% endfor %}
+                    </ul>
+                    {% else %}
+                    <span class="text-muted small">Nothing unique</span>
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th>Features all share</th>
+                <td colspan="{{ comparison.products|length }}">
+                    {% if comparison.shared_features %}
+                    {{ comparison.shared_features|join(", ") }}
+                    {% else %}
+                    <span class="text-muted small">None</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th></th>
+                {% for p in comparison.products %}
+                <td>
+                    {% if p.within_budget %}
+                    <form method="POST" action="{{ url_for('review') }}">
+                        <input type="hidden" name="product_id" value="{{ p.id }}">
+                        <input type="hidden" name="budget" value="{{ budget }}">
+                        <button type="submit" class="btn btn-primary w-100">Select Product</button>
+                    </form>
+                    {% else %}
+                    <button class="btn btn-secondary w-100" disabled>Over budget</button>
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<a href="{{ url_for('shop') }}" class="btn btn-outline-secondary mt-3">Start over</a>
+{% endblock %}
