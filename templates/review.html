@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Review your order - SmartSpend AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <h2 class="mb-4">Review your order</h2>
+
+        <div class="alert alert-warning">
+            <strong>Test mode:</strong> this is a PayPal Sandbox demo. No real money
+            will be charged and nothing will be shipped.
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <span class="badge bg-secondary mb-2">{{ product.category|capitalize }}</span>
+                <h4 class="card-title">{{ product.name }}</h4>
+                <ul class="small">
+                    {% for f in product.features %}<li>{{ f }}</li>{% endfor %}
+                </ul>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span>Your budget</span>
+                    <span>${{ "%.2f"|format(budget) }} USD</span>
+                </div>
+                <div class="d-flex justify-content-between fw-bold fs-5">
+                    <span>Total to pay</span>
+                    <span>${{ "%.2f"|format(product.price) }} {{ product.currency }}</span>
+                </div>
+                <div class="d-flex justify-content-between text-success">
+                    <span>Budget remaining after purchase</span>
+                    <span>${{ "%.2f"|format(remaining) }} USD</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-secondary btn-lg w-100 mt-4" disabled>
+            Pay with PayPal (coming in the next milestone)
+        </button>
+        <a href="{{ url_for('shop') }}" class="btn btn-outline-secondary w-100 mt-2">Start over</a>
+    </div>
+</div>
+{% endblock %}

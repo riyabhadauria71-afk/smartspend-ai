@@ -8,20 +8,60 @@
     {% if form.use %} | Use: {{ form.use }}{% endif %}
 </p>
 
+{% if ai_error %}
+<div class="alert alert-warning">{{ ai_error }}</div>
+{% endif %}
+
+{% if ai and ai.summary %}
+<div class="alert alert-info">
+    <strong>AI summary:</strong> {{ ai.summary }}
+    <div class="small text-muted mt-1">
+        AI-generated explanation. All prices come from our catalog.
+    </div>
+</div>
+{% endif %}
+
 <h4 class="mt-4">Within your budget</h4>
 {% if within_budget %}
 <div class="row g-3">
     {% for p in within_budget %}
+    {% set advice = ai.advice.get(p.id) if ai else none %}
     <div class="col-md-6 col-lg-4">
-        <div class="card h-100 shadow-sm">
+        <div class="card h-100 shadow-sm {% if ai and ai.best_value_id == p.id %}border-success border-2{% endif %}">
             <div class="card-body">
                 <span class="badge bg-secondary mb-2">{{ p.category|capitalize }}</span>
+                {% if ai and ai.best_value_id == p.id %}
+                <span class="badge bg-success mb-2">Best value</span>
+                {% endif %}
                 <h5 class="card-title">{{ p.name }}</h5>
                 <p class="fs-5 fw-bold mb-1">${{ "%.2f"|format(p.price) }} {{ p.currency }}</p>
                 <p class="text-success small">Remaining budget: ${{ "%.2f"|format(p.remaining_budget) }}</p>
+
                 <ul class="small">
                     {% for f in p.features %}<li>{{ f }}</li>{% endfor %}
                 </ul>
+
+                {% if advice %}
+                <hr>
+                <p class="small mb-2"><strong>Why it may suit you:</strong> {{ advice.explanation }}</p>
+                {% if advice.pros %}
+                <ul class="small text-success mb-1">
+                    {% for t in advice.pros %}<li>{{ t }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% if advice.cons %}
+                <ul class="small text-danger mb-0">
+                    {% for t in advice.cons %}<li>{{ t }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% endif %}
+            </div>
+            <div class="card-footer bg-white border-0 pb-3">
+                <form method="POST" action="{{ url_for('review') }}">
+                    <input type="hidden" name="product_id" value="{{ p.id }}">
+                    <input type="hidden" name="budget" value="{{ budget }}">
+                    <button type="submit" class="btn btn-primary w-100">Select Product</button>
+                </form>
             </div>
         </div>
     </div>
@@ -41,6 +81,9 @@
                 <h5 class="card-title">{{ p.name }}</h5>
                 <p class="fs-5 fw-bold mb-1">${{ "%.2f"|format(p.price) }} {{ p.currency }}</p>
                 <p class="text-danger small">Over budget by ${{ "%.2f"|format(p.over_by) }}</p>
+                {% if ai and ai.over_notes.get(p.id) %}
+                <p class="small mb-0">{{ ai.over_notes.get(p.id) }}</p>
+                {% endif %}
             </div>
         </div>
     </div>
