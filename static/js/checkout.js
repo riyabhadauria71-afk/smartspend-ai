@@ -20,6 +20,7 @@
 
     const productId = container.dataset.productId;
     const budget = container.dataset.budget;
+    let processing = false;  // stops a second capture request from starting
 
     paypal.Buttons({
         // Runs when the buyer clicks the PayPal button.
@@ -38,13 +39,37 @@
         },
 
         // Runs after the buyer approves in the PayPal popup.
-        // Nothing has been charged yet. The server capture comes in the next milestone.
-        onApprove(data) {
-            showMessage(
-                "info",
-                "Approved in PayPal (order " + data.orderID + "). Payment is NOT complete yet: " +
-                "the server capture step is the next milestone."
-            );
+        // The server captures and verifies. This page never decides that a payment succeeded.
+        async onApprove(data, actions) {
+            if (processing) {
+                return;
+            }
+            processing = true;
+            showMessage("info", "Verifying your payment with PayPal. Please wait...");
+
+            try {
+                const response = await fetch(
+                    "/api/orders/" + encodeURIComponent(data.orderID) + "/capture",
+                    { method: "POST", headers: { "Content-Type": "application/json" } }
+                );
+                const result = await response.json().catch(function () { return {}; });
+
+                if (response.ok && result.redirect) {
+                    window.location.href = result.redirect;  // server-verified result page
+                    return;
+                }
+
+                processing = false;
+                if (result.restart && actions && typeof actions.restart === "function") {
+                    showMessage("warning", result.error || "Please choose another payment method.");
+                    return actions.restart();
+                }
+                showMessage("danger", result.error || "The payment could not be completed.");
+            } catch (err) {
+                processing = false;
+                console.error("Capture request failed:", err);
+                showMessage("danger", "A network problem stopped us confirming the payment. Please try again.");
+            }
         },
 
         onCancel() {

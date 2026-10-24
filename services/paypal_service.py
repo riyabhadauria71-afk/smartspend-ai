@@ -13,7 +13,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 REQUEST_TIMEOUT = 20  # seconds
-ORDER_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
+ORDER_ID_PATTERN = re.compile(r"^[A-Z0-9]{8,36}$")
 
 _token_lock = threading.Lock()
 _token_cache = {"value": None, "expires_at": 0.0}
@@ -22,9 +22,10 @@ _token_cache = {"value": None, "expires_at": 0.0}
 class PayPalServiceError(Exception):
     """Raised with a user-friendly message when a PayPal call fails."""
 
-    def __init__(self, message, status_code=502):
+    def __init__(self, message, status_code=502, restart=False):
         super().__init__(message)
         self.status_code = status_code
+        self.restart = restart  # True when the buyer should pick another payment method
 
 
 def _config():
@@ -151,3 +152,30 @@ def get_order(order_id):
         logger.error("PayPal get order failed: %s %s", resp.status_code, resp.text[:300])
         raise PayPalServiceError("Could not read the order from PayPal.")
     return resp.json()
+
+def request_capture(order_id):
+    """Ask PayPal to capture an approved order. Returns (http_status, issue_name).
+
+    The request ID is derived from the order ID, so repeating this call is safe:
+    PayPal treats it as the same request instead of charging twice.
+    """
+    if not isinstance(order_id, str) or not ORDER_ID_PATTERN.match(order_id):
+        raise PayPalServiceError("Invalid order ID.", 400)
+
+    resp = _paypal_request(
+        "POST",
+        f"/v2/checkout/orders/{order_id}/capture",
+        {},
+        request_id=f"capture-{order_id}",
+    )
+
+    issue = None
+    if not resp.ok:
+        try:
+            body = resp.json()
+            details = body.get("details") or []
+            issue = details[0].get("issue") if details else body.get("name")
+        except ValueError:
+            issue = None
+        logger.warning("PayPal capture returned %s (%s): %s", resp.status_code, issue, resp.text[:300])
+    return resp.status_code, issue

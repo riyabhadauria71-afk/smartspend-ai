@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Payment result - SmartSpend AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+        {% if summary and summary.paid %}
+        <div class="alert alert-success">
+            <h4 class="alert-heading mb-1">Payment verified</h4>
+            PayPal confirmed this payment on our server.
+        </div>
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ summary.product.name }}</h5>
+                <div class="d-flex justify-content-between fs-5 fw-bold">
+                    <span>Amount paid</span>
+                    <span>{{ summary.amount }} {{ summary.currency }}</span>
+                </div>
+                <hr>
+                <div class="small">
+                    <div><strong>Payment status:</strong> {{ summary.capture_status }}</div>
+                    <div><strong>Sandbox capture ID:</strong> {{ summary.capture_id }}</div>
+                    <div><strong>PayPal order ID:</strong> {{ summary.order_id }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% elif summary %}
+        <div class="alert alert-warning">
+            <h4 class="alert-heading mb-1">Payment not completed</h4>
+            PayPal reports the payment status as <strong>{{ summary.capture_status }}</strong>,
+            so this purchase is not marked as paid.
+        </div>
+
+        {% else %}
+        <div class="alert alert-danger">
+            <h4 class="alert-heading mb-1">We could not show this payment</h4>
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <div class="alert alert-secondary small">
+            <strong>This is a test transaction.</strong> It used the PayPal Sandbox with
+            test accounts. No real money moved and no product will be shipped.
+        </div>
+
+        <a href="{{ url_for('shop') }}" class="btn btn-primary w-100">Shop again</a>
+    </div>
+</div>
+{% endblock %}

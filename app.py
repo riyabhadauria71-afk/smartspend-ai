@@ -1,7 +1,9 @@
 import logging
 import math
+import os
 
-from flask import Flask, jsonify, render_template, request
+from dotenv import load_dotenv
+from flask import Flask, jsonify, render_template, request, session, url_for
 
 from services.catalog_service import (
     compare_products,
@@ -10,12 +12,20 @@ from services.catalog_service import (
     get_product_by_id,
 )
 from services.gemini_service import GeminiServiceError, get_ai_recommendations
+from services.payment_service import capture_payment, verify_payment
 from services.paypal_service import PayPalServiceError, create_order, get_public_client_id
 
+load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
-app.config["PAYPAL_CLIENT_ID"] = get_public_client_id()
+
+# Needed to sign the session cookie that remembers which payments this browser made.
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "")
+if app.secret_key in ("", "replace_me", "replace_with_a_random_secret"):
+    raise RuntimeError("FLASK_SECRET_KEY is missing or still a placeholder in .env")
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 MAX_ALLOWED_BUDGET = 10000  # sanity limit, in USD
 
@@ -173,6 +183,50 @@ def api_create_order():
 
     return jsonify({"id": order_id})
 
+def remember_paid_order(order_id):
+    """Remember (in the signed session cookie) that this browser completed this payment."""
+    ids = session.get("paid_orders", [])
+    if order_id not in ids:
+        ids.append(order_id)
+    session["paid_orders"] = ids[-10:]
+
+
+@app.route("/api/orders/<order_id>/capture", methods=["POST"])
+def api_capture_order(order_id):
+    """Capture an approved PayPal order. The server decides whether it was paid."""
+    try:
+        summary = capture_payment(order_id)
+    except PayPalServiceError as exc:
+        return jsonify({"error": str(exc), "restart": exc.restart}), exc.status_code
+
+    if not summary["paid"]:
+        return jsonify({
+            "error": f"PayPal reports the payment as {summary['capture_status']}, "
+                     "so it is not marked as paid.",
+            "restart": False,
+        }), 402
+
+    remember_paid_order(summary["order_id"])
+    return jsonify({
+        "status": "COMPLETED",
+        "redirect": url_for("payment_result", order_id=summary["order_id"]),
+    })
+
+
+@app.route("/payment/result/<order_id>")
+def payment_result(order_id):
+    """Show the purchase summary, only for payments this browser made, and only
+    after PayPal has confirmed them again."""
+    if order_id not in session.get("paid_orders", []):
+        return render_template(
+            "result.html", summary=None,
+            error="We could not find a payment for this session.",
+        ), 404
+    try:
+        summary = verify_payment(order_id)
+    except PayPalServiceError as exc:
+        return render_template("result.html", summary=None, error=str(exc)), exc.status_code
+    return render_template("result.html", summary=summary, error=None)
 
 if __name__ == "__main__":
     app.run(debug=True)
